@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Image from './../assets/1.jpg';
-import LoginForm from '../components/FormModal';
+import FormModal from '../components/FormModal';
 
 export default class Home extends Component {
     
@@ -19,13 +19,14 @@ export default class Home extends Component {
                 height: '60px'
             },
             button: ['Login', 'Register'],
-            data: {}
+            data: {},
+            information: ''
         }
     }
 
     _renderForm(key){
         this.setState({isOpen: true});
-        (key === 0) ? this.setState({data: this.state.loginForm}) : this.setState({data: this.state.registerForm});
+        (key === 0) ? this.setState({data: this.state.loginForm, information: 'login'}) : this.setState({data: this.state.registerForm, information: 'register'});
     }
 
     render() {
@@ -33,7 +34,7 @@ export default class Home extends Component {
             <div style={style.pageLayout} >
                 {this.state.button.map((data, key) => <button key={key} onClick={(e) => this._renderForm(key)} className={(key === 0) ? "btn btn-primary" : "btn btn-success"}>{data}</button> )}
 
-                <LoginForm isOpen={this.state.isOpen} isClose={(e) => this.setState({isOpen: false})} data={this.state.data}/>
+                <FormModal isOpen={this.state.isOpen} isClose={(e) => this.setState({isOpen: false})} data={this.state.data} information={this.state.information}/>
             </div>
         )
     }

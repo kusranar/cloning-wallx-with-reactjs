@@ -4,7 +4,7 @@ export default class Account {
         this.accountNumber = accountNumber;
         this.accountName = accountName;
         this.openDate = openDate;
-        this.balance = balance;
+        this.balance = parseInt(balance);
         this.cif = cif
     }
 }
