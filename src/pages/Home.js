@@ -26,7 +26,7 @@ export default class Home extends Component {
 
     _renderForm(key){
         this.setState({isOpen: true});
-        (key === 0) ? this.setState({data: this.state.loginForm, information: 'login'}) : this.setState({data: this.state.registerForm, information: 'register'});
+        (key === 0) ? this.setState({data: this.state.loginForm, information: 'Login'}) : this.setState({data: this.state.registerForm, information: 'Register'});
     }
 
     render() {

@@ -19,9 +19,22 @@ class FormModal extends Component {
             accountName: '',
             sender: '',
             receiver: '',
-            amount: 0
+            amount: 0,
+            account: {}
         }
         this._onSubmit = this._onSubmit.bind(this);
+    }
+
+    componentWillMount() {
+        if (this.props.information === 'Edit') {
+            accountService.getAccountByAccountNumber(this.props.accountNumber)
+                .then(res => {
+                    if (res.data.responseCode === '01') {
+                        console.log(res.data.data)
+                        this.setState({ account: res.data.data });
+                    }
+                })
+        }
     }
 
     _input = (event, data) => {
@@ -71,35 +84,49 @@ class FormModal extends Component {
                     }
                 })
         } else if (this.state.accountName.length > 0) {
-            accountService.createAccount(new Account('', this.state.accountName, '', '', sessionStorage.getItem('token')))
-                .then(res => {
-                    if (res.data.responseCode === "01") {
-                        alert('Create Account Success');
-                        this.props.isClose();
-                        this.props.update(res.data.data);
-                    } else {
-                        alert(res.data.responseMessage);
-                    }
-                })
-        } else if (this.state.amount > 0) {
-            if(this.state.sender.length > 0 && this.props.data.button === 'Topup'){
-                transactionService.topup(new Transaction('', '', this.props.receiver, this.state.sender, this.state.amount, this.props.data.button, sessionStorage.getItem('token')))
+            if (this.props.information === 'Edit') {
+                accountService.updateAccount(new Account(this.state.account.accountNumber, this.state.accountName, this.state.account.openDate, this.state.account.balance, sessionStorage.getItem('token')))
                     .then(res => {
                         if (res.data.responseCode === "01") {
-                            alert('Topup Success');
+                            alert('Edit Account Success');
                             this.props.isClose();
-                            this.props.update(res.data.data);
+                            this.props.update();
                         } else {
                             alert(res.data.responseMessage);
                         }
                     })
-            } else if(this.state.receiver.length > 0 && this.props.data.button === 'Transfer'){
-                transactionService.transfer(new Transaction('', '', this.state.receiver, this.props.sender, this.state.amount, this.props.data.button, sessionStorage.getItem('token')))
+            } else {
+                accountService.createAccount(new Account('', this.state.accountName, '', '', sessionStorage.getItem('token')))
                     .then(res => {
-                        if(res.data.responseCode === "01"){
+                        if (res.data.responseCode === "01") {
+                            alert('Create Account Success');
+                            this.props.isClose();
+                            this.props.update();
+                        } else {
+                            alert(res.data.responseMessage);
+                        }
+                    })
+            }
+
+        } else if (this.state.amount > 0) {
+            if (this.state.sender.length > 0 && this.props.information === 'Topup') {
+                transactionService.topup(new Transaction('', '', this.props.accountNumber, this.state.sender, this.state.amount, this.props.information, sessionStorage.getItem('token')))
+                    .then(res => {
+                        if (res.data.responseCode === "01") {
+                            alert('Topup Success');
+                            this.props.isClose();
+                            this.props.update();
+                        } else {
+                            alert(res.data.responseMessage);
+                        }
+                    })
+            } else if (this.state.receiver.length > 0 && this.props.information === 'Transfer') {
+                transactionService.transfer(new Transaction('', '', this.state.receiver, this.props.accountNumber, this.state.amount, this.props.information, sessionStorage.getItem('token')))
+                    .then(res => {
+                        if (res.data.responseCode === "01") {
                             alert('Transaction Success');
                             this.props.isClose();
-                            this.props.update(res.data.data);
+                            this.props.update();
                         } else {
                             alert(res.data.responseMessage);
                         }
@@ -125,30 +152,30 @@ class FormModal extends Component {
                     <div className="form-group" key={key}>
                         <label htmlFor={data}>{data}</label>
                         <input disabled={
-                            (data === 'Account Number' || data === 'Transaction Type' || (this.props.receiver !== '' && data === 'Receiver') || (this.props.sender !== '' && data === 'Sender')) 
-                            ? 'disabled' : ''} type={(data === 'Password') ? 'password' : (data === 'Birthdate') ? 'date' : (data === 'Amount') ? 'number' : 'text'} onChange={(e) => { this._input(e, data) }} className="form-control" id={data} placeholder={(data === 'Transaction Type' && (this.props.data.button === 'Topup' || this.props.data.button === 'Transfer')) ? this.props.data.button : (this.props.receiver !== '' && data === 'Receiver') ? this.props.receiver : (this.props.sender !== '' && data === 'Sender') ? this.props.sender : data} required />
+                            (data === 'Account Number' || data === 'Transaction Type' || (this.props.information === 'Topup' && data === 'Receiver') || (this.props.information === 'Transfer' && data === 'Sender'))
+                                ? 'disabled' : ''}
+                            type={(data === 'Password') ? 'password' : (data === 'Birthdate') ? 'date' : (data === 'Amount') ? 'number' : 'text'}
+                            onChange={(e) => { this._input(e, data) }}
+                            className="form-control"
+                            id={data}
+                            placeholder={(data === 'Transaction Type' && (this.props.information === 'Topup' || this.props.information === 'Transfer')) ? this.props.information : (this.props.information === 'Topup' && data === 'Receiver') ? this.props.accountNumber : (this.props.information === 'Transfer' && data === 'Sender') ? this.props.accountNumber : (this.props.information === 'Edit' && data === 'Account Number') ? this.props.accountNumber : (Object.entries(this.state.account).length > 0) ? this.state.account.accountName : data} required />
                     </div>
                 )}
-                <button type="submit" className="btn btn-primary">{this.props.data.button}</button>
+                <button type="submit" className="btn btn-primary">{this.props.information}</button>
             </form>
         )
     }
 
     render() {
-        console.log(this.props.receiver);
-        if (this.props.isOpen) {
-            if (Object.entries(this.props.data).length === 0 && this.props.data.constructor === Object) {
-                return <div></div>
-            } else {
-                return (
-                    <div style={{ width: '400px', position: 'absolute', top: this.props.data.height, left: '34%', backgroundColor: 'white', padding: '10px', borderRadius: '1%', border: '0.5px solid black' }}>
-                        <button onClick={this.props.isClose} style={{ position: 'absolute', top: '5px', right: '5px', backgroundColor: 'transparent', border: 'none' }}>x</button>
-                        {this._renderForm()}
-                    </div>
-                )
-            }
-        } else {
+        if (Object.entries(this.props.data).length === 0 && this.props.data.constructor === Object) {
             return <div></div>
+        } else {
+            return (
+                <div style={{ width: '400px', position: 'absolute', top: this.props.data.height, left: '34%', backgroundColor: 'white', padding: '10px', borderRadius: '1%', border: '0.5px solid black' }}>
+                    <button onClick={this.props.isClose} style={{ position: 'absolute', top: '5px', right: '5px', backgroundColor: 'transparent', border: 'none' }}>x</button>
+                    {this._renderForm()}
+                </div>
+            )
         }
     }
 }

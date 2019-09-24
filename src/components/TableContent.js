@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import FormModal from './FormModal';
+import { deleteAccount } from './../services/Account';
 const DATE_OPTIONS = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' };
 
 export default class TableContent extends Component {
@@ -38,8 +39,8 @@ export default class TableContent extends Component {
             },
             isOpen: false,
             data: {},
-            receiver: '',
-            sender: '',
+            accountNumber: '',
+            information: ''
         }
     }
 
@@ -47,7 +48,7 @@ export default class TableContent extends Component {
         return (
             <div>
                 {(Object.entries(data.button).length === 0) ?
-                    <span></span> : <button onClick={ () => this._handleEventOnClick(data.button)} type="button" className="btn btn-secondary m-2">{data.button}</button>
+                    <span></span> : <button onClick={() => this._handleEventOnClick(data.button)} type="button" className="btn btn-secondary m-2">{data.button}</button>
                 }
                 {(Object.entries(this.props.data).length === 0) ?
                     <h6>Doesnt have account</h6> :
@@ -78,7 +79,7 @@ export default class TableContent extends Component {
                         <td>{this.props.data[i].accountName}</td>
                         <td>{this.props.data[i].balance}</td>
                         <td>
-                            {this.state.fieldAccount.action.map((value, key) => <span style={{cursor: 'pointer'}} onClick={ () => this._handleEventOnClick(value[0], this.props.data[i].accountNumber)} key={key} className={value[1]}>{value[0]}</span>)}
+                            {this.state.fieldAccount.action.map((value, key) => <span style={{ cursor: 'pointer' }} onClick={() => this._handleEventOnClick(value[0], this.props.data[i].accountNumber)} key={key} className={value[1]}>{value[0]}</span>)}
                         </td>
                     </tr>
                 )
@@ -90,7 +91,7 @@ export default class TableContent extends Component {
                         <td>{this.props.data[i].notelp}</td>
                         <td>{this.props.data[i].amount}</td>
                         <td>
-                            {this.state.fieldAccount.action.map((value, key) => <span style={{cursor: 'pointer'}} onClick={ () => this._handleEventOnClick()} key={key} className={value[1]}>{value[0]}</span>)}
+                            {this.state.fieldAccount.action.map((value, key) => <span style={{ cursor: 'pointer' }} onClick={() => this._handleEventOnClick()} key={key} className={value[1]}>{value[0]}</span>)}
                         </td>
                     </tr>
                 )
@@ -102,7 +103,7 @@ export default class TableContent extends Component {
                         <td>{this.props.data[i].accountName}</td>
                         <td>{this.props.data[i].balance}</td>
                         <td>
-                            {this.state.fieldAccount.action.map((value, key) => <span style={{cursor: 'pointer'}} onClick={ () => this._handleEventOnClick()} key={key} className={value[1]}>{value[0]}</span>)}
+                            {this.state.fieldAccount.action.map((value, key) => <span style={{ cursor: 'pointer' }} onClick={() => this._handleEventOnClick()} key={key} className={value[1]}>{value[0]}</span>)}
                         </td>
                     </tr>
                 )
@@ -112,36 +113,64 @@ export default class TableContent extends Component {
     }
 
     _handleEventOnClick = (...args) => {
-        console.log(args);
-        this.setState({isOpen: true})
-        if(args.length === 1){
-            if(args[0] === 'Create Account'){
-                this.setState({data: this.state.fieldAccount.formAccount})
+        if (args[0] === 'Delete') {
+            if (window.confirm("are you sure?")) {
+                deleteAccount(args[1])
+                    .then(res => {
+                        if (res.data.responseCode === "01") {
+                            alert(`Delete ${args[1]} Success`);
+                            this.setState({ isOpen: false })
+                            this.props.update();
+                        } else {
+                            alert(res.data.responseMessage);
+                        }
+                    })
             }
+
         } else {
-            if(args[0] === 'Topup'){
-                this.state.fieldTransaction.formTransaction.button = 'Topup';
-                this.setState({sender: ''})
-                this.setState({receiver: args[1]});
-                this.setState({data: this.state.fieldTransaction.formTransaction});
-            } else if(args[0] === 'Transfer'){
-                this.state.fieldTransaction.formTransaction.button = 'Transfer';
-                this.setState({receiver: ''})
-                this.setState({sender: args[1]});
-                this.setState({data: this.state.fieldTransaction.formTransaction});
+            this.setState({ isOpen: true });
+            if (args.length === 1) {
+                if (args[0] === 'Create Account') {
+                    this.setState({ information: 'Create Account' });
+                    this.setState({ data: this.state.fieldAccount.formAccount });
+                }
+            } else {
+                if (args[0] === 'Topup') {
+                    this.setState({ accountNumber: args[1] });
+                    this.setState({ information: 'Topup' });
+                    this.setState({ data: this.state.fieldTransaction.formTransaction });
+                } else if (args[0] === 'Transfer') {
+                    this.setState({ accountNumber: args[1] });
+                    this.setState({ information: 'Transfer' });
+                    this.setState({ data: this.state.fieldTransaction.formTransaction });
+                } else if (args[0] === 'Edit') {
+                    this.setState({ accountNumber: args[1] });
+                    this.setState({ information: 'Edit' });
+                    this.setState({ data: this.state.fieldAccount.formAccount });
+                }
             }
+        }
+
+
+    }
+
+    _renderFormModal = () => {
+        if (this.state.isOpen) {
+            return <FormModal isClose={(e) => this.setState({ isOpen: false })} data={this.state.data} update={(e) => this.props.update()} accountNumber={this.state.accountNumber} information={this.state.information} />
+        } else {
+            return <div></div>
         }
     }
 
     render() {
         return (
             <div>
-                <FormModal isOpen={this.state.isOpen} isClose={(e) => this.setState({ isOpen: false })} data={this.state.data} update={(e) => this.props.update(e)} receiver={this.state.receiver} sender={this.state.sender}/>
+                {this._renderFormModal()}
                 {
-                    (this.props.information === 'account') ? 
-                        this._renderTable(this.state.fieldAccount) : 
-                        (this.props.information === 'wallet') ? 
-                            this._renderTable(this.state.fieldWallet) : 
+                    (this.props.information === 'account') ?
+                        this._renderTable(this.state.fieldAccount) :
+                        (this.props.information === 'wallet') ?
+                            this._renderTable(this.state.fieldWallet) :
                             this._renderTable(this.state.fieldTransaction)
                 }
             </div>
