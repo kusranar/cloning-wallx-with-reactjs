@@ -20,6 +20,7 @@ class FormModal extends Component {
             username: '',
             password: '',
             accountName: '',
+            accountNumber: '',
             sender: '',
             receiver: '',
             amount: 0,
@@ -46,8 +47,7 @@ class FormModal extends Component {
             walletTypeService()
                 .then(res => {
                     if (res.data.responseCode === '01') {
-                        this.setState({ walletTypes: res.data.data });
-                        this.setState({ walletType: res.data.data[0].description });
+                        this.setState({ walletTypes: res.data.data, walletType: res.data.data[0].description });
                     }
                 })
         }
@@ -56,7 +56,7 @@ class FormModal extends Component {
                 accountService.getAccountByCif(sessionStorage.getItem('token'))
                     .then(res => {
                         if (res.data.responseCode === '01') {
-                            this.setState({ accounts: res.data.data });
+                            this.setState({ accounts: res.data.data, accountNumber: res.data.data[0].accountNumber });
                         }
                     })
             } else if (this.props.information === 'Edit') {
@@ -89,6 +89,9 @@ class FormModal extends Component {
                 break;
             case 'Account Name':
                 this.setState({ accountName: event.target.value });
+                break;
+            case 'Account Number':
+                this.setState({ accountNumber: event.target.value });
                 break;
             case 'Sender':
                 this.setState({ sender: event.target.value });
@@ -169,9 +172,20 @@ class FormModal extends Component {
                             alert(res.data.responseMessage);
                         }
                     })
+            } else if (this.state.accountNumber.length > 0) {
+                console.log('uyes');
+                transactionService.topup(new Transaction('', '', this.props.phone, this.state.accountNumber, this.state.amount, this.props.information, sessionStorage.getItem('token')))
+                    .then(res => {
+                        if(res.data.responseCode === '01'){
+                            alert('Topup Success');
+                            this.props.isClose();
+                            this.props.update();
+                        } else {
+                            alert(res.data.responseMessage);
+                        }
+                    })
             }
         } else if (this.state.phone.length > 0) {
-            console.log(this.state.phone, this.state.walletType);
             if (this.state.walletType.length > 0) {
                 walletService.createWallet(new Wallet('', this.state.walletType, 'ACN-001', this.state.phone, 0, '', sessionStorage.getItem('token')))
                     .then(res => {
@@ -184,7 +198,6 @@ class FormModal extends Component {
                         }
                     })
             } else {
-                console.log('yes')
                 walletService.updateWallet(new Wallet(this.state.wallet.id, this.state.wallet.walletId, this.state.wallet.accountNumber, this.state.phone, this.state.wallet.amount, this.state.wallet.createDate, this.state.wallet.cif))
                     .then(res => {
                         if (res.data.responseCode === '01') {
@@ -215,7 +228,7 @@ class FormModal extends Component {
             <form onSubmit={this._onSubmit}>
                 {this.props.data.form.map((data, key) =>
                     <div className="form-group" key={key}>
-                        <label htmlFor={data}>{data}</label>
+                        {(this.props.information === 'Create Wallet' && (data === 'Account' || data === 'Amount')) ? <span></span> : <label htmlFor={data}>{data}</label>}
                         {this._renderInput(data)}
                     </div>
                 )}
@@ -231,12 +244,19 @@ class FormModal extends Component {
                     {Object.entries(this.state.walletTypes).map((value, key) => <option key={key} value={value[1].description}>{value[1].description}</option>)}
                 </select>
             )
-        } else {
+        } else if (Object.entries(this.state.accounts).length > 0 && data === 'Account') {
+            return (
+                <select onChange={(e) => { this._input(e, data) }} className="custom-select" id="accountsNumber">
+                    {Object.entries(this.state.accounts).map((value, key) => <option key={key} value={value[1].accountNumber}>{value[1].accountName + ' ' + value[1].accountNumber}</option>)}
+                </select>
+            )
+        }
+        else {
             return (
                 <input
                     disabled={
                         (data === 'Account Number' || data === 'Transaction Type' || (this.props.information === 'Topup' && data === 'Receiver') || (this.props.information === 'Transfer' && data === 'Sender') || (this.props.information === 'Topup' && data === 'Wallet Type') || (this.props.information === 'Topup' && data === 'Phone') || (this.props.information === 'Edit' && data === 'Wallet Type')) ? 'disabled' : ''}
-                    type={(data === 'Password') ? 'password' : (data === 'Birthdate') ? 'date' : (data === 'Amount' || data === 'Phone') ? 'number' : 'text'}
+                    type={(this.props.information === 'Create Wallet' && (data === 'Account' || data === 'Amount')) ? 'hidden' : (data === 'Password') ? 'password' : (data === 'Birthdate') ? 'date' : (data === 'Amount' || data === 'Phone') ? 'number' : 'text'}
                     onChange={(e) => { this._input(e, data) }}
                     className="form-control"
                     id={data}
@@ -253,7 +273,7 @@ class FormModal extends Component {
     }
 
     render() {
-        console.log(this.state.wallet);
+        console.log(this.state.accounts, this.state.accountNumber);
         if (Object.entries(this.props.data).length === 0 && this.props.data.constructor === Object) {
             return <div></div>
         } else {

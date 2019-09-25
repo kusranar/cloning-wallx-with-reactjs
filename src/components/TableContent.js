@@ -23,7 +23,7 @@ export default class TableContent extends Component {
                 field: ['Open Date', 'Wallet', 'Phone', 'Amount'],
                 action: [['Topup', 'badge badge-success'], ['Edit', 'badge badge-warning'], ['Delete', 'badge badge-danger']],
                 formWallet: {
-                    form: ['Wallet Type', 'Phone'],
+                    form: ['Wallet Type', 'Phone', 'Account', 'Amount'],
                     button: 'Create Wallet',
                     height: '60px'
                 }
@@ -123,7 +123,6 @@ export default class TableContent extends Component {
                         .then(res => {
                             if (res.data.responseCode === "01") {
                                 alert(`Delete ${args[1]} ${args[2]} Success`);
-                                this.setState({ isOpen: false })
                                 this.props.update();
                             } else {
                                 alert(res.data.responseMessage);
@@ -134,7 +133,6 @@ export default class TableContent extends Component {
                         .then(res => {
                             if (res.data.responseCode === "01") {
                                 alert(`Delete ${args[1]} ${args[2]} Success`);
-                                this.setState({ isOpen: false })
                                 this.props.update();
                             } else {
                                 alert(res.data.responseMessage);
@@ -151,7 +149,7 @@ export default class TableContent extends Component {
                 } else if (args[0] === 'Wallet') {
                     this.setState({ information: `Create ${args[0]}`, data: this.state.fieldWallet.formWallet });
                 }
-            } else if (args.length === 2) {
+            } else if (args.length === 3) {
                 if (args[0] === 'Topup') {
                     this.setState({ accountNumber: args[1], information: args[0], data: this.state.fieldTransaction.formTransaction });
                 } else if (args[0] === 'Transfer') {
@@ -163,7 +161,6 @@ export default class TableContent extends Component {
                 if (args[0] === 'Topup') {
                     this.setState({ information: args[0], walletType: args[1], phone: args[2], data: this.state.fieldWallet.formWallet });
                 } else if (args[0] === 'Edit') {
-                    console.log(args);
                     this.setState({ information: args[0], walletType: args[1], phone: args[2], data: this.state.fieldWallet.formWallet });
                 }
             }
