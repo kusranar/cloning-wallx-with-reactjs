@@ -10,12 +10,10 @@ export default class Home extends Component {
             isOpen: false,
             loginForm: {
                 form: ['Username', 'Password'],
-                button: 'Login',
                 height: '200px'
             },
             registerForm: {
                 form: ['Firstname', 'Lastname', 'Birthdate', 'Username', 'Password'],
-                button: 'Register',
                 height: '60px'
             },
             button: ['Login', 'Register'],
@@ -33,8 +31,7 @@ export default class Home extends Component {
         return (
             <div style={style.pageLayout} >
                 {this.state.button.map((data, key) => <button key={key} onClick={(e) => this._renderForm(key)} className={(key === 0) ? "btn btn-primary" : "btn btn-success"}>{data}</button> )}
-
-                <FormModal isOpen={this.state.isOpen} isClose={(e) => this.setState({isOpen: false})} data={this.state.data} information={this.state.information}/>
+                {this.state.isOpen ? <FormModal isClose={(e) => this.setState({isOpen: false})} data={this.state.data} information={this.state.information}/> : <div></div>}
             </div>
         )
     }

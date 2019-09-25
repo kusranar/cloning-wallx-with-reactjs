@@ -2,8 +2,8 @@ import Axios from 'axios';
 
 const url = 'http://localhost:3001';
 
-const getWalletById = (id) => {
-    return Axios.get(url+`/wallet/${id}`);
+const getWalletByPhone = (phone) => {
+    return Axios.get(url+`/wallet/${phone}`);
 }
 
 const getWalletByCif = (cif) => {
@@ -18,8 +18,8 @@ const updateWallet = (wallet) => {
     return Axios.put(url+'/wallet', wallet);
 }
 
-const deleteWallet = (wallet) => {
-    return Axios.delete(url+'/wallet', wallet);
+const deleteWallet = (id) => {
+    return Axios.delete(url+`/wallet/${id}`);
 }
 
-export {getWalletById, getWalletByCif, createWallet, updateWallet, deleteWallet};
+export {getWalletByPhone, getWalletByCif, createWallet, updateWallet, deleteWallet};
