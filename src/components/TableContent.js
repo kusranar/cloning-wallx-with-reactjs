@@ -54,7 +54,7 @@ export default class TableContent extends Component {
                     <span></span> : <button onClick={() => this._handleEventOnClick(this.props.information)} type="button" className="btn btn-secondary m-2">{data.button}</button>
                 }
                 {(Object.entries(this.props.data).length === 0) ?
-                    <h6>Doesnt have account</h6> :
+                    <h6>Doesnt have {this.props.information}</h6> :
                     <table className="table table-striped ml-2 mr-2">
                         <thead>
                             <tr>
@@ -103,10 +103,11 @@ export default class TableContent extends Component {
             } else {
                 data.push(
                     <tr key={i}>
-                        <td>{this.props.data[i].openDate.replace('T', ' ').slice(0, 16)}</td>
-                        <td>{this.props.data[i].accountNumber}</td>
-                        <td>{this.props.data[i].accountName}</td>
-                        <td>{this.props.data[i].balance}</td>
+                        <td>{this.props.data[i].date.replace('T', ' ').slice(0, 16)}</td>
+                        <td>{this.props.data[i].transactionType}</td>
+                        <td>{this.props.data[i].accountNumberCredit}</td>
+                        <td>{this.props.data[i].accountNumberDebit}</td>
+                        <td>{this.props.data[i].amount}</td>
                     </tr>
                 )
             }
